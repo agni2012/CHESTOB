@@ -136,7 +136,7 @@ let board = ([
 board.enPassantFile = null;
 //peice {type: "pawn... etc", side: "white"}
 function setup() {
-  createCanvas(550, 550);
+  createCanvas(500, 500);
   frameRate(10);
 
   let cnv = select('canvas');
