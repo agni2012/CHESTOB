@@ -1,2 +1,2 @@
 # CHESTOB
-A fully only chess bot that can cook me. 
+A fully online chess bot that can cook me. 
