@@ -1,5 +1,5 @@
 let timeLimit = 1000; //ms
-let debugMode = true;
+let debugMode = false;
 // noprotect
 let label;
 let moveNumber=0;
@@ -136,7 +136,7 @@ let board = ([
 board.enPassantFile = null;
 //peice {type: "pawn... etc", side: "white"}
 function setup() {
-  createCanvas(580, 580);
+  createCanvas(550, 550);
   frameRate(10);
 
   let cnv = select('canvas');
