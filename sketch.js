@@ -1,3 +1,7 @@
+
+let side = "white"; //the side the player is playing as
+let turn = "white";
+
 let timeLimit = 1000; //ms
 let debugMode = false;
 // noprotect
@@ -6,8 +10,6 @@ let moveNumber=0;
 p5.disableFriendlyErrors = true;
 let playerPromoteTo = "queen";
 let botPromoteTo = "queen";
-let side = "white";
-let turn = "white";
 let highlightedSquares = [] //for all the legal moves
 let selectedPiece = null;
 let P = {
@@ -294,14 +296,19 @@ function draw() {
     }
   }
   label.html("Promote to: " + playerPromoteTo);
-  if(turn == "black"){
-    let startTime = Date.now();
-    let m = bot("black", board);
+  if(turn == oppositeSide(side)){
+    let m = bot(turn, board);
     board = applyMove(m, board, true);
-    turn = "white"
+    turn = oppositeSide(turn);
     moveNumber++;
-  }
-                    
+  }//else 
+  // if(turn == (side)){
+  //   let m = bot((turn), board);
+  //   board = applyMove(m, board, true);
+  //   turn = oppositeSide(turn);
+  //   moveNumber++;
+  // }
+  dbg("Turn: "+turn+", Move: "+moveNumber);                 
 }
 function gameOver(state, side){
   if(state == "checkmate"){
