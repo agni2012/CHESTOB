@@ -14,10 +14,16 @@
   <body>
     <main>
     </main>
-    <p id='info'>Press Ctrl-Shift I for progress. </p>
+    <p id='info'>Turn: white</p>
+
+    <p id='bot-status'></p>
+    <p>Time Limit (seconds)
+      <input type="text" id="time-limit" placeholder="30" />
+    </p>
+    <script src="boardTools.js"></script>
     <script src="sketch.js"></script>
     <script src="zobrist.js"></script>
     <script src="transposition-table.js"></script>
-    <script src="bot.js"></script>
+    <!--<script src="bot.js"></script> Now a web worker!-->
   </body>
 </html>

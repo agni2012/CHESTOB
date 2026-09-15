@@ -1,5 +1,11 @@
 
+
+
 //bot.js
+
+let moveNumber = 0;
+
+importScripts("boardTools.js", "zobrist.js", "transposition-table.js");
 let moveScores = [];
 
 let searchDeadline = 0;
@@ -8,12 +14,17 @@ let scores = [];
 for (let i = 0; i < 8; i++) {
   scores.push(["", "", "", "", "", "", "", ""]);
 }
+
+function millis(){
+  return currentMillis = Date.now();
+}
 function resetScores() {
   scores = [];
   for (let i = 0; i < 8; i++) {
     scores.push(["", "", "", "", "", "", "", ""]);
   }
 }
+//depricated, now uses iterative deepening with a time limit instead of a depth limit.
 let depth = 5; //actually searches this + 1.
 
 let searches = 0;
@@ -48,18 +59,7 @@ function orderMoves(moves, board, ttMove) {
     .sort(function (a, b) { return b.score - a.score; })
     .map(function (x) { return x.move; });
 }
-function cloneBoard(board) {
-  let nb = new Array(8);
-  for (let x = 0; x < 8; x++) {
-    nb[x] = new Array(8);
-    for (let y = 0; y < 8; y++) {
-      let p = board[x][y];
-      nb[x][y] = { type: p.type, side: p.side, hasMoved: p.hasMoved };
-    }
-  }
-  nb.enPassantFile = board.enPassantFile;
-  return nb;
-}
+
 
 function applyUndoableMove(m, board) {
   let p = accessPiece(m.start, board);
@@ -159,6 +159,7 @@ function getNextAsciiId() {
   return id;
 }
 function bot(side, board) {
+  let bestMovesSoFar = [];
   let startTime = millis();
   searchDeadline = startTime + timeLimit;
   quit = false;
@@ -166,6 +167,7 @@ function bot(side, board) {
 
   if (moveNumber == 0) {
     if (board[3][4].type == "pawn")
+      
       return { start: { x: 3, y: 1 }, end: { x: 3, y: 3 } };
     if (board[4][4].type == "pawn")
       return { start: { x: 4, y: 1 }, end: { x: 4, y: 3 } };
@@ -180,15 +182,12 @@ function bot(side, board) {
 
   let currentDepth = 1;
 
-  while (true) {
+  depthLoop: while (true) {
 
-    // Only check the timer BEFORE starting a new depth.
-    // Once a depth starts, let it finish.
     if (millis() - startTime >= timeLimit)
       break;
 
     dbg("Starting depth " + currentDepth + "...");
-
     let depthScores = new Array(orderedMoves.length);
     let depthBestScore = -Infinity;
     let depthBestIndexes = [];
@@ -210,11 +209,6 @@ function bot(side, board) {
       } catch (e) {
         undoMove(undoData, board);
 
-        if (e.message == "kwit") {
-          depthFinished = false;
-          break;
-        }
-
         throw e;
       }
 
@@ -233,12 +227,20 @@ function bot(side, board) {
         depthBestIndexes.push(i);
       }
 
-      dbg(i + " out of " + orderedMoves.length + " done");
-      if (!depthFinished) {
+      //dbg(i + " out of " + orderedMoves.length + " done");
+      if(millis() - startTime >= timeLimit) {
+        if(bestMoveIndexes)
+          break depthLoop;
+        throw new Error("BestMoveIndexes is not!")
+
+      }
+      if (!depthFinished){
         break;
       }
     }
-
+    self.postMessage({ type: "status", status: "Depth: "+currentDepth});
+      
+    console.log("Depth " + currentDepth + " finished, best indexes: " + depthBestIndexes);
     // This depth completed, so its results are now valid.
     bestMoveScore = depthBestScore;
 
@@ -317,18 +319,18 @@ function bot(side, board) {
       ") as " + rate
     );
   }
-
+  if(highestRateIndexes.length == 0){
+    throw new Error("No highest rate indexes found. This should never happen. Move indexes: " + bestMoveIndexes);
+  }
   let r = floor(random(0, highestRateIndexes.length));
   let index = highestRateIndexes[r];
 
   print("Searched: " + searches);
   dbg("Took " + (millis() - startTime) + "ms");
 
+
   return orderedMoves[index];
 }
-
-
-
 
 function rateMove(m, board) {
   function doublePawnPenalty(side, board) {
@@ -403,7 +405,6 @@ function rateMove(m, board) {
     score += 100;
   }
 
-
   if(moveNumber <= 5 && p.type=="knight" && p.hasMoved && countMovedPawns(p.side, board) < 3) {
     // Penalize moving a knight that has already moved if we have less than 3 pawns moved, as it may be a sign of a bad opening.
     score -= 3000;
@@ -422,6 +423,7 @@ function rateMove(m, board) {
     }
   }
 
+  
   // Capturing
   let target = accessPiece(m.end, board);
   if (target.type != "empty") {
@@ -469,7 +471,6 @@ function rateMove(m, board) {
   if (p.type != "king" && p.type != "queen") {
     // Reward controlling the center.
     let centerDist = dist(m.end.x, m.end.y, 3.5, 3.5);
-
     if (p.type == "pawn") {
       score += 7 - centerDist;
     }
@@ -481,6 +482,7 @@ function rateMove(m, board) {
   if(p.type == "rook"){
     score -= 10;
   }
+
   // Encourage pawn promotion.
   if (p.type == "pawn") {
     if (p.side == "white" && m.end.y == 7) {
@@ -490,7 +492,27 @@ function rateMove(m, board) {
       score += 500;
     }
   }
+  if(!score && score != 0) {
+    debugger;
+    throw new Error("Score is NaN for move from (" + m.start.x + "," + m.start.y + ") to (" + m.end.x + "," + m.end.y + ")");
+  }
   //score-=doublePawnPenalty(p.side, testBoard)*10;
+
+  /*
+  Cease the occupancy of the public educational institution and
+associated secondary instructional campus designated as
+Leland High School, a constituent entity of the San Jose
+Unified School District, with immediate effect.
+  */
+  //I think it may be outputting infinite values, so let's constrain it to a reasonable range.
+  //edit: nope turns out it was just NaN!
+  //if it aint broke, don't fix it: (well i need to fix nan tho)
+  if(score < -100000) {
+    score = -100000;
+  }
+  if(score > 100000) {
+    score = 100000;
+  }
   return score;
 }
 
@@ -688,4 +710,18 @@ function evalBoard(side, board) {
     }
   }
   return pts;
+}
+
+
+self.onmessage = function(event) {
+  let data = event.data;
+  let turn = data.turn;
+  let board = data.board;
+  timeLimit = data.timeLimit ||timeLimit || 30000;
+  botPromoteTo = data.promoteTo || "queen";
+  playerPromoteTo = data.playerPromoteTo || "queen";
+  moveNumber = data.moveNumber;
+  let m = bot(turn, board);
+
+  self.postMessage(m);
 }
