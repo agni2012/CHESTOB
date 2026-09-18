@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>CHESTOB v1.0</title>
+    </head>
+    <body>
+        <h1>CHESTOB v1.0</h1>
+        <p>Play my chess bot!</p>
+        <p>Select side you play:</p>
+        <button onclick="(side='white', updateSideText());" id="white">White</button>
+        <button onclick="(side='black', updateSideText());"id="black">Black</button>
+        <p>You will play as: <span id="side">white</span></p>
+        <p>Select time format:</p>
+        <p>Starting Time (mins): <input type="text" id="start-time" value="10"></p>
+        <p>Time Increment (secs): <input type="text" id="time-inc" value="2"></p>
+        <button id="start">Start!</button>
+        <script>
+            let side = "white"
+            function updateSideText(){
+                document.getElementById("side").innerHTML = side;
+            }
+            document.getElementById("start").addEventListener("click",()=>{
+                let params = {
+                    side: side,
+                    startTime: document.getElementById("start-time").value,
+                    timeInc: document.getElementById("time-inc").value,
+                }
+                window.location.href = "/game.html?"+new URLSearchParams(params).toString();
+            })
+        </script>
+    </body>
+</html>

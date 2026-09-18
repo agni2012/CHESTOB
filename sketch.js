@@ -1,15 +1,23 @@
-//set bots time limit in boardTools.js
 
 
-side = "white"; //the side the player is playing as
-turn = "white";
+const queryString = window.location.search; //credit to ai mode
+const urlParams = new URLSearchParams(queryString);
+const params = Object.fromEntries(urlParams.entries());
+
+let playerTimer = parseFloat(params.startTime*60*1000);
+let botTimer = parseFloat(params.startTime*60*1000);
+const timeInc =parseFloat(params.timeInc*1000);
+let side = params.side || "white";
+let turn = "white";
+let timeLimit = 30000; //ms
+let playerPromoteTo;
+let botPromoteTo;
 
 
-document.getElementById("time-limit").value = timeLimit / 1000 || 30;
+
 let thinking = false;
 let debugMode = false;
 // noprotect
-let label;
 let moveNumber=0;
 p5.disableFriendlyErrors = true;
 //1st declared in boardTools.js
@@ -73,11 +81,14 @@ let board = ([
 }); //to make hasMoved not linked
 board.enPassantFile = null;
 //peice {type: "pawn... etc", side: "white"}
+
+let label;
 function setup() {
   createCanvas(450, 450);
   frameRate(10);
 
   let cnv = select('canvas');
+  cnv.parent("canvas-container")
   cnv.elt.addEventListener('contextmenu', e => e.preventDefault());
 
   let x = 700, y=300;
@@ -153,7 +164,6 @@ function drawBoard(board) {
   }
 }
 
-
 function draw() {
   background(220);
   
@@ -171,12 +181,33 @@ function draw() {
   }
   label.html("Promote to: " + playerPromoteTo);
   if(turn == oppositeSide(side) && !thinking){
-    let timeLimit = document.getElementById("time-limit").value * 1000 || 30000;
-    let m = botWorker.postMessage({turn: turn, board: board, moveNumber: moveNumber, promoteTo: botPromoteTo, timeLimit: timeLimit});
+
+    let m = botWorker.postMessage({
+      turn: turn,
+      board: board,
+      moveNumber: moveNumber,
+      timeLimit: (botTimer/200)+1900,
+      side: side,
+    });
     thinking = true;
     
+    
   }
+
+  if(turn == side){
+    playerTimer-=deltaTime;
+  }else{
+    botTimer-=deltaTime;
+  }
+  document.getElementById("botTimer").innerHTML = millisToStr(botTimer);
+  document.getElementById("playerTimer").innerHTML = millisToStr(playerTimer);
   document.getElementById("info").innerHTML = "Turn: "+turn+", Move: "+moveNumber;         
+}
+function millisToStr(m){
+  let mins = m/60000;
+  let f = 0;
+  if(m<20000) f=2;
+  return floor(mins)+":"+((m%60000)/1000).toFixed(f);
 }
 botWorker.onmessage = function(e) {
   if(e.data.type == "status"){
@@ -240,6 +271,8 @@ mouseClicked = function() {
       highlightedSquares = [];
 
       turn = oppositeSide(turn)
+
+      playerTimer+=timeInc;
       //draw it
       drawBoard(board);
     }else{
@@ -252,4 +285,3 @@ function clearHightlights(){
   selectedPiece = null;
   highlightedSquares = [];
 }
-

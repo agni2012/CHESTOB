@@ -1,8 +1,7 @@
-let timeLimit = 30000; //ms
-let playerPromoteTo;
-let botPromoteTo;
-let side;
-let turn;
+
+
+
+
 
 function applyMove(x1, y1, x2, y2, board, apply) { //also accepts ({x,y}, {x,y}), and {start:c..}
 

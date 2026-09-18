@@ -2,6 +2,9 @@
 
 
 //bot.js
+let timeLimit;
+let side;
+
 
 let moveNumber = 0;
 
@@ -184,7 +187,7 @@ function bot(side, board) {
 
   depthLoop: while (true) {
 
-    if (millis() - startTime >= timeLimit)
+    if (millis() - startTime >= timeLimit && currentDepth>3)
       break;
 
     dbg("Starting depth " + currentDepth + "...");
@@ -228,7 +231,7 @@ function bot(side, board) {
       }
 
       //dbg(i + " out of " + orderedMoves.length + " done");
-      if(millis() - startTime >= timeLimit) {
+      if(millis() - startTime >= timeLimit && currentDepth > 3)  {//at least search d3
         if(bestMoveIndexes)
           break depthLoop;
         throw new Error("BestMoveIndexes is not!")
@@ -455,17 +458,6 @@ function rateMove(m, board) {
   }
   if(p.type == "queen") {
     score -= 3*(8 - 0.5 * countMovedPawns(p.side, testBoard));
-  }
-  if(p.type == "pawn") {
-    let penalty = 5;
-    //if the pawn is close to the king penalize it more
-    let kingPos = findKing(p.side, testBoard);
-    let distToKing = dist(m.end.x, m.end.y, kingPos.x, kingPos.y);
-    if(distToKing < 5) {
-      penalty += 3*(5 - distToKing);
-    }
-    
-    
   }
   
   if (p.type != "king" && p.type != "queen") {
@@ -717,9 +709,11 @@ self.onmessage = function(event) {
   let data = event.data;
   let turn = data.turn;
   let board = data.board;
-  timeLimit = data.timeLimit ||timeLimit || 30000;
-  botPromoteTo = data.promoteTo || "queen";
-  playerPromoteTo = data.playerPromoteTo || "queen";
+  side = data.side;
+  timeLimit = data.timeLimit || timeLimit || 3000;
+  //maybe implemented later
+  botPromoteTo = "queen";
+  playerPromoteTo = "queen";
   moveNumber = data.moveNumber;
   let m = bot(turn, board);
 
