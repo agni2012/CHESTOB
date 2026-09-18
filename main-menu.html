@@ -25,7 +25,9 @@
                     startTime: document.getElementById("start-time").value,
                     timeInc: document.getElementById("time-inc").value,
                 }
-                window.location.href = "/game.html?"+new URLSearchParams(params).toString();
+                if(window.location.includes("chestob")
+                    window.location.href += "/chestob/game.html?"+new URLSearchParams(params).toString();
+                else window.location.href += "/chestob/game.html?"+new URLSearchParams(params).toString();
             })
         </script>
     </body>
