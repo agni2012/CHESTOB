@@ -4,9 +4,9 @@ const queryString = window.location.search; //credit to ai mode
 const urlParams = new URLSearchParams(queryString);
 const params = Object.fromEntries(urlParams.entries());
 
-let playerTimer = parseFloat(params.startTime*60*1000);
-let botTimer = parseFloat(params.startTime*60*1000);
-const timeInc =parseFloat(params.timeInc*1000);
+let playerTimer = parseFloat(params.startTime*1000*60);
+let botTimer =    parseFloat(params.startTime*1000*60);
+const timeInc =   parseFloat(params.timeInc  *1000);
 let side = params.side || "white";
 let turn = "white";
 let timeLimit = 30000; //ms
@@ -199,6 +199,14 @@ function draw() {
   }else{
     botTimer-=deltaTime;
   }
+  if(playerTimer <= 0){
+    noLoop();
+    gameOver("timeout", oppositeSide(side));
+  }
+  if(botTimer <= 0){
+    noLoop();
+    gameOver("timeout", side);
+  }
   document.getElementById("botTimer").innerHTML = millisToStr(botTimer);
   document.getElementById("playerTimer").innerHTML = millisToStr(playerTimer);
   document.getElementById("info").innerHTML = "Turn: "+turn+", Move: "+moveNumber;         
@@ -217,16 +225,20 @@ botWorker.onmessage = function(e) {
   let m = e.data;
   
   board = applyMove(m.start, m.end, board, true);
+  botTimer += timeInc;
   thinking = false;
   turn = oppositeSide(turn);
   document.getElementById("bot-status").innerHTML = "Idle";
   moveNumber++;
 }
 function gameOver(state, side){
-  if(state == "checkmate"){
-    err("Game Over! Good job "+side)
+  if(state == "timeout"){
+    alert("Timeout! "+side+" wins!");
+  }
+  else if(state == "checkmate"){
+    alert("Checkmate! "+side+" wins!");
   }else{
-    err("Oof a draw!")
+    alert("Stalemate! It's a draw!");
   }
 }
 function screenCordsToChessBoardCoords(x, y) {
@@ -272,7 +284,9 @@ mouseClicked = function() {
 
       turn = oppositeSide(turn)
 
-      playerTimer+=timeInc;
+      //make sure to add time inc in seconds
+      playerTimer += timeInc;
+      
       //draw it
       drawBoard(board);
     }else{
