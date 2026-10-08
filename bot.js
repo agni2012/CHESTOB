@@ -689,19 +689,28 @@ function findInterestingMoves(side, board) {
 
   return [];
 }
-
+const ebValues = {
+  "pawn": 1,
+  "rook": 5,
+  "queen": 9,
+  "bishop": 3,
+  "knight": 3,
+  "king": 0,
+  "empty": 0
+}
 function evalBoard(side, board) {
-  let pts = 0;
+  let sidePts = 0;
+  let opponentPts = 0;
   for (let x = 0; x < 8; x++) {
     for (let y = 0; y < 8; y++) {
       if (board[x][y].side == side) {
-        pts += values[board[x][y].type];
+        sidePts += ebValues[board[x][y].type];
       } else {
-        pts -= values[board[x][y].type];
+        opponentPts += ebValues[board[x][y].type];
       }
     }
   }
-  return pts;
+  return sidePts/opponentPts-1;
 }
 
 

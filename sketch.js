@@ -186,7 +186,7 @@ function draw() {
       turn: turn,
       board: board,
       moveNumber: moveNumber,
-      timeLimit: (botTimer/200)+1900,
+      timeLimit: (botTimer/40)+1900,
       side: side,
     });
     thinking = true;
